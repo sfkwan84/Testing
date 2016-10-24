@@ -39,6 +39,16 @@ app.get('/blocklist/IsBlocked/:id', function (req, res) {
     });
 });
 
+
+app.get('/blocklist/GetUserBlockInfo/:id', function (req, res) {
+    sql.connect(config, function(err) {
+        var request = new sql.Request();
+        request.query('SELECT TOP 1 * FROM BlockList WHERE UserId = \'' + req.params.id + '\' AND [Status] = 1 AND GETDATE() < BlockTo ORDER BY BlockFrom DESC;', function(err, recordset) {
+            res.json(recordset);
+        });
+    });
+});
+
 app.get('/blocklist/RemoveBlock/:id', function (req, res) {
     var request = new sql.Request();
     request.query('UPDATE BlockList SET [Status] = 0 WHERE Id = \'' + req.params.id + '\';', function(err, recordset) {
