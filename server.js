@@ -39,7 +39,6 @@ app.get('/blocklist/IsBlocked/:id', function (req, res) {
     });
 });
 
-
 app.get('/blocklist/GetUserInfo/:id', function (req, res) {
     sql.connect(config, function(err) {
         var request = new sql.Request();
@@ -88,6 +87,51 @@ app.post('/blocklist/Add/', function (req, res) {
         }
     });
 });
+
+
+app.post('/gateevent/enter', function (req, res) {
+    var request = new sql.Request();
+    request.input('carParkId', carParkId);
+    request.input('gateId', carParkId);
+    request.input('deviceId', carParkId);
+    request.input('userId', req.body.UserId);
+    request.input('vehicleNumber', req.body.VehicleNumber);
+    var query = 'INSERT INTO GateLog (CarParkId, GateId, DeviceId, UserId, VehicleNumber, Direction) VALUES ( @carParkId, @gateId, @deviceId, @userId, @vehicleNumber, \'I\')';
+    request.query(query, function(err, recordset) {
+        if(err == null)
+        {
+            res.json(true);
+        }
+        else
+        {
+            console.log(err);
+            res.json(false);
+        }
+    });
+});
+
+app.post('/gateevent/exit', function (req, res) {
+    var request = new sql.Request();
+    request.input('carParkId', carParkId);
+    request.input('gateId', carParkId);
+    request.input('deviceId', carParkId);
+    request.input('userId', req.body.UserId);
+    request.input('vehicleNumber', req.body.VehicleNumber);
+    var query = 'INSERT INTO GateLog (CarParkId, GateId, DeviceId, UserId, VehicleNumber, Direction) VALUES ( @carParkId, @gateId, @deviceId, @userId, @vehicleNumber, \'O\')';
+    request.query(query, function(err, recordset) {
+        if(err == null)
+        {
+            res.json(true);
+        }
+        else
+        {
+            res.json(false);
+        }
+    });
+});
+
+
+
 
 Date.prototype.addDays = function(days)
 {
