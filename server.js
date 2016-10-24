@@ -131,7 +131,109 @@ app.post('/gateevent/exit', function (req, res) {
 });
 
 
+app.get('/main/GetUserStatus/:id', function (req, res) {
+    sql.connect(config, function(err) {
+        var request = new sql.Request();
+        var query = 'SELECT TOP 1 Email, CASE WHEN B.Id IS NULL THEN \'N\' ELSE \'Blocked\' END BlockedStatus, BlockFrom BlockedStartDate, BlockTo BlockedEndDate FROM [User] U LEFT OUTER JOIN BlockList B ON B.UserId = U.UserId WHERE GETDATE() >= B.BlockFrom AND GETDATE() <= B.BlockTo AND U.UserId = @userId;';
+        request.input('userId', req.params.id);
+        request.query(query, function(err, recordset) {
+            if(recordset.length > 0)
+            {
+                res.json(recordset[0]);
+            }
+            else
+            {
+                res.json(null);
+            }
+        });
+    });
+});
 
+app.get('/main/GetUserReported/:id', function (req, res) {
+    sql.connect(config, function(err) {
+        var request = new sql.Request();
+        var query = 'SELECT * FROM [ReportEvent] WHERE CarParkId = @carParkId AND ReporterId = @reporterId ORDER BY DateCreated DESC';
+        request.input('carParkId', carParkId);
+        request.input('reporterId', req.params.id);
+        request.query(query, function(err, recordset) {
+            console.log(err);
+            console.log(recordset);
+            res.json(recordset);
+        });
+    });
+});
+
+app.get('/main/GetUserCommitted/:id', function (req, res) {
+    sql.connect(config, function(err) {
+        var request = new sql.Request();
+        var query = 'SELECT * FROM [ReportEvent] WHERE CarParkId = @carParkId AND TargetUserId = @userId ORDER BY DateCreated DESC';
+        request.input('carParkId', carParkId);
+        request.input('userId', req.params.id);
+        request.query(query, function(err, recordset) {
+            res.json(recordset);
+        });
+    });
+});
+
+app.get('/main/GetCarParkStatus', function (req, res) {
+    sql.connect(config, function(err) {
+        var request = new sql.Request();
+        var query = 'SELECT COUNT(1) Usage FROM CarParkAccess WHERE CarParkId = @carParkId AND LastOut IS NULL OR LastIn > LastOut;';
+        request.input('carParkId', carParkId);
+        request.query(query, function(err, recordset) {
+            var usage = recordset[0].Usage;
+            var availability = (carParkCapacity - usage)*100/carParkCapacity;
+            
+            var status = { 'Total' : carParkCapacity };
+            status.CheckedIn  = usage;
+            
+            if(availability > 50)
+                status.Availability = 'High';
+            else if(availability > 25)
+                status.Availability = 'Medium';
+            else if(availability > 0 )
+                status.Availability = 'Low';
+            else
+                status.Availability = 'Full';
+            
+            res.json(status);
+        });
+    });
+});
+
+app.post('/main/PostReport', function (req, res) {    
+    var request = new sql.Request();
+    request.input('vehicleNumber', req.body.PlateNumber);
+    var query = 'SELECT TOP(1) * FROM [User] WHERE VehicleNumber = UPPER(REPLACE(@vehicleNumber, \' \', \'\'))';
+    request.query(query, function(err, recordset) {
+        if(recordset.length > 0)
+        {
+            var request = new sql.Request();
+            request.input('carParkId', carParkId);
+            request.input('reporterId', req.body.UserId);
+            request.input('reportType', req.body.Offence);
+            request.input('vehicleNumber', recordset[0].VehicleNumber);
+            request.input('targetUserId', recordset[0].UserId);
+            request.input('image', req.body.srcImage);
+            request.input('status', 'Pending');
+            var query = 'INSERT INTO [ReportEvent] (ReporterId, CarParkId, ReportType, VehicleNumber, TargetUserId, [Status], Image) VALUES (@reporterId, @carParkId, @reportType, UPPER(REPLACE(@vehicleNumber, \' \', \'\')) , @targetUserId, @status, @image)';
+            request.query(query, function(err, recordset) {
+                if(err == null)
+                {
+                    res.json(true);
+                }
+                else
+                {
+                    res.json(false);
+                }
+            });
+        }
+        else
+        {
+            res.json(false);
+        }
+    });
+});
 
 Date.prototype.addDays = function(days)
 {
