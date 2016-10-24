@@ -18,6 +18,10 @@ var config = {
     }
 };
 
+app.get('/', function (req, res) {
+    res.end('Hello World!!');
+});
+
 app.get('/blocklist/IsBlocked/:id', function (req, res) {
     sql.connect(config, function(err) {
         var request = new sql.Request();
@@ -44,6 +48,11 @@ app.get('/blocklist/RemoveBlock/:id', function (req, res) {
 
 app.get('/blocklist/GetAll', function (req, res) {
     sql.connect(config, function(err) {
+        if(err != null)
+        {
+            res.json(err);
+        }
+        
         var request = new sql.Request();
         request.query('SELECT * FROM BlockList ;', function(err, recordset) {
             res.json(recordset);
@@ -80,5 +89,5 @@ Date.prototype.addDays = function(days)
 var server = app.listen(8081, function () {
 var host = server.address().address;
 var port = server.address().port;
-console.log("Example app listening at http://%s:%s", host, port);
+    console.log("Example app listening at http://%s:%s", host, port);
 });
