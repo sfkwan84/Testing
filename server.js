@@ -95,7 +95,10 @@ app.post('/blocklist/Add/', function (req, res) {
 
 
 app.post('/gateevent/enter', function (req, res) {
-    var data = {};    
+    var data = {};
+    data.result = true;
+    data.message = 'kkkk';
+    res.json(data);
     sql.connect(config, function(err) {
         var request = new sql.Request();
         request.input('carParkId', carParkId);
