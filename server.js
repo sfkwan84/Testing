@@ -5,6 +5,13 @@ var sql = require('mssql');
 
 app.use(bodyParser.json());
 
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
+
 var carParkId = '36A4AF9C-AA4E-4B58-B8DE-328C9670F447';
 var gateId = 'F844C637-4A41-4C01-8DAA-94ABC285BCEB';
 
@@ -27,11 +34,6 @@ app.get('/', function (req, res) {
     res.end('Hello World!!');
 });
 
-app.all('/', function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    next();
-});
 
 app.get('/blocklist/IsBlocked/:id', function (req, res) {
     sql.connect(config, function(err) {
