@@ -10,7 +10,7 @@ var gateId = 'F844C637-4A41-4C01-8DAA-94ABC285BCEB';
 
 var inboundDeviceId = '34D25D78-59E4-4D78-B76D-18B579645524';
 var outboundDeviceId = '6D1BB9CC-AD54-48AE-8707-B7E0806973F4';
-var carParkCapacity = 1;
+var carParkCapacity = 3;
 
 var config = {
     user: 'sfkwan@poc-carpark.database.windows.net',
