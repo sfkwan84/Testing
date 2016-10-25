@@ -6,6 +6,11 @@ var sql = require('mssql');
 app.use(bodyParser.json());
 
 var carParkId = '36A4AF9C-AA4E-4B58-B8DE-328C9670F447';
+var gateId = 'F844C637-4A41-4C01-8DAA-94ABC285BCEB';
+
+var inboundDeviceId = '34D25D78-59E4-4D78-B76D-18B579645524';
+var outboundDeviceId = '6D1BB9CC-AD54-48AE-8707-B7E0806973F4';
+var carParkCapacity = 1;
 
 var config = {
     user: 'sfkwan@poc-carpark.database.windows.net',
@@ -134,9 +139,17 @@ app.post('/gateevent/exit', function (req, res) {
 app.get('/main/GetUserStatus/:id', function (req, res) {
     sql.connect(config, function(err) {
         var request = new sql.Request();
-        var query = 'SELECT TOP 1 Email, CASE WHEN B.Id IS NULL THEN \'N\' ELSE \'Blocked\' END BlockedStatus, BlockFrom BlockedStartDate, BlockTo BlockedEndDate FROM [User] U LEFT OUTER JOIN BlockList B ON B.UserId = U.UserId WHERE GETDATE() >= B.BlockFrom AND GETDATE() <= B.BlockTo AND U.UserId = @userId;';
+        var query = 'SELECT * FROM (SELECT TOP 1 Email, CASE WHEN B.Id IS NULL THEN \'N\' ELSE \'Blocked\' END BlockedStatus, BlockFrom BlockedStartDate, BlockTo BlockedEndDate FROM [User] U LEFT OUTER JOIN BlockList B ON B.UserId = U.UserId AND GETDATE() >= B.BlockFrom AND GETDATE() <= B.BlockTo WHERE U.UserId = @userId) X LEFT OUTER JOIN (SELECT  SUM(CASE WHEN TargetUserId = @userId THEN 1 ELSE 0 END) [Committed], SUM(CASE WHEN ReporterId = @reporterId THEN 1 ELSE 0 END) [Reported] FROM [ReportEvent] WHERE CarParkId = @carParkId AND ((TargetUserId = @userId AND [Status] = \'Processed\') OR ReporterId = @reporterId)) Y ON 1 = 1';
+        request.input('carParkId', carParkId);
         request.input('userId', req.params.id);
+        request.input('reporterId', req.params.id);
+        console.log(req.params.id);
         request.query(query, function(err, recordset) {
+            if(err != null)
+            {
+                console.log('GetUserStatus Error: ' + err);
+            }
+            
             if(recordset.length > 0)
             {
                 res.json(recordset[0]);
@@ -166,7 +179,7 @@ app.get('/main/GetUserReported/:id', function (req, res) {
 app.get('/main/GetUserCommitted/:id', function (req, res) {
     sql.connect(config, function(err) {
         var request = new sql.Request();
-        var query = 'SELECT * FROM [ReportEvent] WHERE CarParkId = @carParkId AND TargetUserId = @userId ORDER BY DateCreated DESC';
+        var query = 'SELECT * FROM [ReportEvent] WHERE CarParkId = @carParkId AND TargetUserId = @userId AND [Status] = \'Processed\' ORDER BY DateCreated DESC';
         request.input('carParkId', carParkId);
         request.input('userId', req.params.id);
         request.query(query, function(err, recordset) {
