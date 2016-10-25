@@ -130,14 +130,14 @@ app.post('/gateevent/enter', function (req, res) {
                     {
                         data.result = true;
                         data.message = 'Success';
-                        res.json(true);
+                        res.json(data);
                     }
                     else
                     {
                         console.log(err);
                         data.result = false;
                         data.message = err;
-                        res.json(false);
+                        res.json(data);
                     }
                 });
             }
