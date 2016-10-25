@@ -27,6 +27,12 @@ app.get('/', function (req, res) {
     res.end('Hello World!!');
 });
 
+app.all('/', function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    next();
+});
+
 app.get('/blocklist/IsBlocked/:id', function (req, res) {
     sql.connect(config, function(err) {
         var request = new sql.Request();
