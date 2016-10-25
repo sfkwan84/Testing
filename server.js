@@ -251,7 +251,7 @@ app.post('/main/PostReport', function (req, res) {
     request.query(query, function(err, recordset) {
         if(err !== null)
         {
-            res.json(err);
+            res.json('Query user info error:' + err);
         }
         
         if(recordset === null)
@@ -277,7 +277,7 @@ app.post('/main/PostReport', function (req, res) {
                 }
                 else
                 {
-                    res.json(err);
+                    res.json('Insert Event failed:' + err);
                 }
             });
         }
