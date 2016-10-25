@@ -268,7 +268,7 @@ app.post('/main/PostReport', function (req, res) {
                 var request = new sql.Request();
                 request.input('carParkId', carParkId);
                 request.input('reporterId', req.body.UserId);
-                request.input('reportType', req.body.Offence);
+                request.input('reportType', req.body.Offense);
                 request.input('vehicleNumber', recordset[0].VehicleNumber);
                 request.input('targetUserId', recordset[0].UserId);
                 request.input('image', req.body.srcImage);
