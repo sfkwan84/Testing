@@ -244,47 +244,54 @@ app.get('/main/GetCarParkStatus', function (req, res) {
     });
 });
 
-app.post('/main/PostReport', function (req, res) {    
-    var request = new sql.Request();
-    request.input('vehicleNumber', req.body.PlateNumber);
-    var query = 'SELECT TOP(1) * FROM [User] WHERE VehicleNumber = UPPER(REPLACE(@vehicleNumber, \' \', \'\'))';
-    request.query(query, function(err, recordset) {
-        if(err !== null)
-        {
-            res.json('Query user info error:' + err);
-        }
-        
-        if(recordset === null)
-        {
-            res.json('Unable to find user info');
-        }
-        
-        if(recordset.length > 0)
-        {
-            var request = new sql.Request();
-            request.input('carParkId', carParkId);
-            request.input('reporterId', req.body.UserId);
-            request.input('reportType', req.body.Offence);
-            request.input('vehicleNumber', recordset[0].VehicleNumber);
-            request.input('targetUserId', recordset[0].UserId);
-            request.input('image', req.body.srcImage);
-            request.input('status', 'Pending');
-            var query = 'INSERT INTO [ReportEvent] (ReporterId, CarParkId, ReportType, VehicleNumber, TargetUserId, [Status], Image) VALUES (@reporterId, @carParkId, @reportType, UPPER(REPLACE(@vehicleNumber, \' \', \'\')) , @targetUserId, @status, @image)';
-            request.query(query, function(err, recordset) {
-                if(err === null)
-                {
-                    res.json(true);
-                }
-                else
-                {
-                    res.json('Insert Event failed:' + err);
-                }
-            });
-        }
-        else
-        {
-            res.json(false);
-        }
+app.post('/main/PostReport', function (req, res) {
+    sql.connect(config, function(err) {
+        var request = new sql.Request();
+        request.input('vehicleNumber', req.body.PlateNumber);
+        var query = 'SELECT TOP(1) * FROM [User] WHERE VehicleNumber = UPPER(REPLACE(@vehicleNumber, \' \', \'\'))';
+        request.query(query, function(err, recordset) {
+            
+            if(err != null)
+            {
+                console.log(err);
+                res.json('Query user info error:' + err);
+            }
+            
+            if(recordset == null)
+            {
+                console.log(err);
+                res.json('Unable to find user info');
+            }
+            
+            if(recordset.length > 0)
+            {
+                var request = new sql.Request();
+                request.input('carParkId', carParkId);
+                request.input('reporterId', req.body.UserId);
+                request.input('reportType', req.body.Offence);
+                request.input('vehicleNumber', recordset[0].VehicleNumber);
+                request.input('targetUserId', recordset[0].UserId);
+                request.input('image', req.body.srcImage);
+                request.input('status', 'Pending');
+                var query = 'INSERT INTO [ReportEvent] (ReporterId, CarParkId, ReportType, VehicleNumber, TargetUserId, [Status], Image) VALUES (@reporterId, @carParkId, @reportType, UPPER(REPLACE(@vehicleNumber, \' \', \'\')) , @targetUserId, @status, @image)';
+                request.query(query, function(err, recordset) {
+                    console.log('Error:' + err);
+                    console.log('Recordset:' + recordset);
+                    if(err === null)
+                    {
+                        res.json(true);
+                    }
+                    else
+                    {
+                        res.json('Insert Event failed:' + err);
+                    }
+                });
+            }
+            else
+            {
+                res.json(false);
+            }
+        });
     });
 });
 
