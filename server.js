@@ -249,6 +249,16 @@ app.post('/main/PostReport', function (req, res) {
     request.input('vehicleNumber', req.body.PlateNumber);
     var query = 'SELECT TOP(1) * FROM [User] WHERE VehicleNumber = UPPER(REPLACE(@vehicleNumber, \' \', \'\'))';
     request.query(query, function(err, recordset) {
+        if(err !== null)
+        {
+            res.json(err);
+        }
+        
+        if(recordset === null)
+        {
+            res.json('Unable to find user info');
+        }
+        
         if(recordset.length > 0)
         {
             var request = new sql.Request();
@@ -261,13 +271,13 @@ app.post('/main/PostReport', function (req, res) {
             request.input('status', 'Pending');
             var query = 'INSERT INTO [ReportEvent] (ReporterId, CarParkId, ReportType, VehicleNumber, TargetUserId, [Status], Image) VALUES (@reporterId, @carParkId, @reportType, UPPER(REPLACE(@vehicleNumber, \' \', \'\')) , @targetUserId, @status, @image)';
             request.query(query, function(err, recordset) {
-                if(err == null)
+                if(err === null)
                 {
                     res.json(true);
                 }
                 else
                 {
-                    res.json(false);
+                    res.json(err);
                 }
             });
         }
