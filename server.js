@@ -95,23 +95,53 @@ app.post('/blocklist/Add/', function (req, res) {
 
 
 app.post('/gateevent/enter', function (req, res) {
-    var request = new sql.Request();
-    request.input('carParkId', carParkId);
-    request.input('gateId', carParkId);
-    request.input('deviceId', carParkId);
-    request.input('userId', req.body.UserId);
-    request.input('vehicleNumber', req.body.VehicleNumber);
-    var query = 'INSERT INTO GateLog (CarParkId, GateId, DeviceId, UserId, VehicleNumber, Direction) VALUES ( @carParkId, @gateId, @deviceId, @userId, @vehicleNumber, \'I\')';
-    request.query(query, function(err, recordset) {
-        if(err == null)
-        {
-            res.json(true);
-        }
-        else
-        {
-            console.log(err);
-            res.json(false);
-        }
+    var data = {};    
+    sql.connect(config, function(err) {
+        var request = new sql.Request();
+        request.input('carParkId', carParkId);
+        request.input('userId', req.body.UserId); 
+        var query = 'SELECT * FROM BlockList WHERE CarParkId = @carParkId AND UserId = @userId AND [Status] = 1 AND GETDATE() > BlockFrom AND GETDATE() < BlockTo;'
+        request.query(query, function(err, recordset) {
+            if(err != null)
+            {
+                console.log('Enter Error: ' + err);
+                data.result = false;
+                data.message = err;
+                res.json(data);
+            }
+            
+            if(recordset.length > 0)
+            {
+                data.result = false;
+                data.message = 'User is blocked from accessing the car park';
+                res.json(data);
+            }
+            else
+            {           
+                var request = new sql.Request();
+                request.input('carParkId', carParkId);
+                request.input('gateId', carParkId);
+                request.input('deviceId', carParkId);
+                request.input('userId', req.body.UserId);
+                request.input('vehicleNumber', req.body.VehicleNumber);    
+                var query = 'INSERT INTO GateLog (CarParkId, GateId, DeviceId, UserId, VehicleNumber, Direction) VALUES ( @carParkId, @gateId, @deviceId, @userId, @vehicleNumber, \'I\')';
+                request.query(query, function(err, recordset) {
+                    if(err == null)
+                    {
+                        data.result = true;
+                        data.message = 'Success';
+                        res.json(true);
+                    }
+                    else
+                    {
+                        console.log(err);
+                        data.result = false;
+                        data.message = err;
+                        res.json(false);
+                    }
+                });
+            }
+        });
     });
 });
 
